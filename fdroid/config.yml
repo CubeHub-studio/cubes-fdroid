@@ -1,5 +1,10 @@
 repo_url: https://cubehub-studio.github.io/sound-of-math-fdroid/repo
 repo_name: Sound of Math F-Droid Repository
-repo_description: F-Droid repository for Sound of Math
+repo_description: Official F-Droid repository for Sound of Math
 
 archive_older: 0
+
+keystore: keystore.p12
+keystorepass: !!str ${FDROID_KEYSTORE_PASSWORD}
+keypass: !!str ${FDROID_KEY_PASSWORD}
+repo_keyalias: soundofmath
