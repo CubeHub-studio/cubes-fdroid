@@ -26,6 +26,7 @@ jobs:
 
       - name: Install F-Droid Server
         run: |
+          set -e
           python -m pip install --upgrade pip
           python -m pip install fdroidserver
 
@@ -62,7 +63,6 @@ jobs:
 
           mkdir -p fdroid/repo
           mkdir -p fdroid/metadata
-          mkdir -p fdroid/repo/icons
 
       - name: Restore signing keystore
         env:
@@ -74,25 +74,31 @@ jobs:
 
           chmod 600 fdroid/keystore.p12
 
-          test -s fdroid/keystore.p12
+          if [ ! -s fdroid/keystore.p12 ]; then
+            echo "ERROR: Keystore is empty."
+            exit 1
+          fi
 
-          echo "Keystore restored."
+          echo "Keystore restored successfully."
 
-      - name: Copy Sound of Math APK
+      - name: Copy APK
         run: |
           set -e
 
           if [ ! -f repo/Sound_Of_Math.apk ]; then
-            echo "ERROR: repo/Sound_Of_Math.apk not found."
+            echo "ERROR: repo/Sound_Of_Math.apk was not found."
             exit 1
           fi
 
           cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
 
           echo "APK copied successfully."
+          ls -lh fdroid/repo/Sound_Of_Math.apk
 
-      - name: Create metadata
+      - name: Create F-Droid metadata
         run: |
+          set -e
+
           cat > fdroid/metadata/com.soundofmath.app.yml <<'EOF'
           Categories:
             - Science
@@ -115,6 +121,8 @@ jobs:
             and calculations into sound.
           EOF
 
+          echo "Metadata created."
+
       - name: Create F-Droid configuration
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
@@ -127,8 +135,6 @@ jobs:
           repo_name: Sound of Math F-Droid Repository
           repo_description: Official F-Droid repository for Sound of Math
 
-          repo_icon: repo/icons/icon.png
-
           archive_older: 0
 
           keystore: keystore.p12
@@ -138,6 +144,8 @@ jobs:
           EOF
 
           chmod 600 fdroid/config.yml
+
+          echo "F-Droid configuration created."
 
       - name: Verify signing key
         env:
@@ -154,15 +162,18 @@ jobs:
             -storepass "$FDROID_KEYSTORE_PASSWORD" \
             -alias soundofmath
 
-          echo "Signing key verified."
+          echo "Signing key verified successfully."
 
       - name: Generate F-Droid repository
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
           FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+
           FDROID_KEY_STORE_PASS: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
           FDROID_KEY_PASS: ${{ secrets.FDROID_KEY_PASSWORD }}
+
         working-directory: fdroid
+
         run: |
           set -e
 
@@ -188,18 +199,33 @@ jobs:
 
           fdroid update
 
-      - name: Verify repository
+      - name: Verify generated repository
         working-directory: fdroid
         run: |
           set -e
 
-          test -f repo/Sound_Of_Math.apk
-          test -f repo/index.jar
-          test -f repo/index.xml
+          echo "Checking generated files..."
 
-          echo "F-Droid repository generated successfully."
+          if [ ! -f repo/Sound_Of_Math.apk ]; then
+            echo "ERROR: APK missing."
+            exit 1
+          fi
 
-          ls -lh repo/
+          if [ ! -f repo/index.jar ]; then
+            echo "ERROR: index.jar was not generated."
+            exit 1
+          fi
+
+          if [ ! -f repo/index.xml ]; then
+            echo "ERROR: index.xml was not generated."
+            exit 1
+          fi
+
+          echo
+          echo "F-Droid repository generated successfully!"
+          echo
+
+          find repo -maxdepth 3 -type f -print
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
