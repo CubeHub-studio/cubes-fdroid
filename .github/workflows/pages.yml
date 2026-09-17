@@ -33,11 +33,9 @@ jobs:
         run: |
           mkdir -p fdroid/repo
           mkdir -p fdroid/metadata
-          mkdir -p fdroid/keys
 
       - name: Verify APK
         run: |
-          echo "Checking APK..."
           test -f repo/Sound_Of_Math.apk
           ls -lh repo/Sound_Of_Math.apk
 
@@ -45,45 +43,75 @@ jobs:
         run: |
           cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
 
-      - name: Create F-Droid configuration
+      - name: Restore F-Droid signing keystore
+        env:
+          FDROID_KEYSTORE: ${{ secrets.FDROID_KEYSTORE }}
         run: |
-          cat > fdroid/config.yml <<'EOF'
+          echo "$FDROID_KEYSTORE" | base64 --decode > fdroid/keystore.p12
+          chmod 600 fdroid/keystore.p12
+
+          test -s fdroid/keystore.p12
+
+      - name: Create F-Droid configuration
+        env:
+          FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
+          FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+        run: |
+          cat > fdroid/config.yml <<EOF
           repo_url: https://cubehub-studio.github.io/sound-of-math-fdroid/repo
           repo_name: Sound of Math F-Droid Repository
-          repo_description: F-Droid repository for Sound of Math
+          repo_description: Official F-Droid repository for Sound of Math
 
           archive_older: 0
 
           keystore: keystore.p12
-          keystorepass: soundofmath-keystore
-          keypass: soundofmath-key
+          keystorepass: ${FDROID_KEYSTORE_PASSWORD}
+          keypass: ${FDROID_KEY_PASSWORD}
           repo_keyalias: soundofmath
-
           EOF
 
-      - name: Generate repository signing key
+          chmod 600 fdroid/config.yml
+
+      - name: Create app metadata
+        run: |
+          cat > fdroid/metadata/com.soundofmath.app.yml <<'EOF'
+          Categories:
+            - Science
+            - Education
+
+          License: Unknown
+
+          WebSite: https://cubehub-studio.github.io/sound-of-math-fdroid/
+
+          SourceCode: https://github.com/CubeHub-studio/sound-of-math-fdroid
+
+          IssueTracker: https://github.com/CubeHub-studio/sound-of-math-fdroid/issues
+
+          AutoName: Sound of Math
+
+          Summary: Explore mathematics through sound
+
+          Description: |
+            Sound of Math is an application that turns mathematical concepts
+            and calculations into sound.
+          EOF
+
+      - name: Generate F-Droid repository
         working-directory: fdroid
         run: |
-          if [ ! -f keystore.p12 ]; then
-            fdroid update --create-key
-          fi
+          fdroid update
 
-      - name: Generate F-Droid metadata
-        working-directory: fdroid
+      - name: Verify F-Droid repository
         run: |
-          fdroid update --create-metadata
-
-      - name: Verify generated repository
-        run: |
-          echo "Generated files:"
+          echo "Repository contents:"
           find fdroid/repo -maxdepth 2 -type f -print
 
           echo
-          echo "Checking required repository files..."
+          echo "Checking required files..."
 
+          test -f fdroid/repo/Sound_Of_Math.apk
           test -f fdroid/repo/index.jar
           test -f fdroid/repo/index.xml
-          test -f fdroid/repo/Sound_Of_Math.apk
 
           echo
           echo "F-Droid repository generated successfully!"
@@ -91,7 +119,7 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload repository
+      - name: Upload F-Droid repository
         uses: actions/upload-pages-artifact@v3
         with:
           path: fdroid/repo
