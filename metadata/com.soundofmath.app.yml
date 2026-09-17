@@ -1,0 +1,26 @@
+Categories:
+  - Science
+  - Education
+
+License: Unknown
+
+WebSite: https://cubehub-studio.github.io/sound-of-math-fdroid/
+
+SourceCode: https://github.com/CubeHub-studio/sound-of-math-fdroid
+
+IssueTracker: https://github.com/CubeHub-studio/sound-of-math-fdroid/issues
+
+AutoName: Sound of Math
+
+Summary: Explore mathematics through sound
+
+Description: |
+  Sound of Math is an application that turns mathematical concepts
+  and calculations into sound.
+
+RepoType: None
+
+Builds:
+  - versionName: 1.0
+    versionCode: 1
+    disable: true
