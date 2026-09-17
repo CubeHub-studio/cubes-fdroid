@@ -38,22 +38,22 @@ jobs:
         run: |
           set -e
 
-          if [ -z "$FDROID_KEYSTORE" ]; then
+          test -n "$FDROID_KEYSTORE" || {
             echo "ERROR: FDROID_KEYSTORE is missing."
             exit 1
-          fi
+          }
 
-          if [ -z "$FDROID_KEYSTORE_PASSWORD" ]; then
+          test -n "$FDROID_KEYSTORE_PASSWORD" || {
             echo "ERROR: FDROID_KEYSTORE_PASSWORD is missing."
             exit 1
-          fi
+          }
 
-          if [ -z "$FDROID_KEY_PASSWORD" ]; then
+          test -n "$FDROID_KEY_PASSWORD" || {
             echo "ERROR: FDROID_KEY_PASSWORD is missing."
             exit 1
-          fi
+          }
 
-          echo "All required secrets are present."
+          echo "All F-Droid secrets are present."
 
       - name: Prepare F-Droid directories
         run: |
@@ -74,28 +74,22 @@ jobs:
 
           chmod 600 fdroid/keystore.p12
 
-          if [ ! -s fdroid/keystore.p12 ]; then
-            echo "ERROR: Keystore is empty."
-            exit 1
-          fi
+          test -s fdroid/keystore.p12
 
-          echo "Keystore restored successfully."
+          echo "Signing keystore restored."
 
       - name: Copy APK
         run: |
           set -e
 
-          if [ ! -f repo/Sound_Of_Math.apk ]; then
-            echo "ERROR: repo/Sound_Of_Math.apk was not found."
-            exit 1
-          fi
+          test -f repo/Sound_Of_Math.apk
 
           cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
 
-          echo "APK copied successfully."
+          echo "APK copied:"
           ls -lh fdroid/repo/Sound_Of_Math.apk
 
-      - name: Create F-Droid metadata
+      - name: Create metadata
         run: |
           set -e
 
@@ -121,8 +115,6 @@ jobs:
             and calculations into sound.
           EOF
 
-          echo "Metadata created."
-
       - name: Create F-Droid configuration
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
@@ -145,8 +137,6 @@ jobs:
 
           chmod 600 fdroid/config.yml
 
-          echo "F-Droid configuration created."
-
       - name: Verify signing key
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
@@ -162,7 +152,7 @@ jobs:
             -storepass "$FDROID_KEYSTORE_PASSWORD" \
             -alias soundofmath
 
-          echo "Signing key verified successfully."
+          echo "Signing key verified."
 
       - name: Generate F-Droid repository
         env:
@@ -177,55 +167,72 @@ jobs:
         run: |
           set -e
 
-          if [ -z "$FDROID_KEY_PASSWORD" ]; then
-            echo "ERROR: FDROID_KEY_PASSWORD is empty."
-            exit 1
-          fi
-
-          if [ -z "$FDROID_KEY_PASS" ]; then
-            echo "ERROR: FDROID_KEY_PASS is empty."
-            exit 1
-          fi
-
-          if [ -z "$FDROID_KEYSTORE_PASSWORD" ]; then
-            echo "ERROR: FDROID_KEYSTORE_PASSWORD is empty."
-            exit 1
-          fi
-
-          if [ -z "$FDROID_KEY_STORE_PASS" ]; then
-            echo "ERROR: FDROID_KEY_STORE_PASS is empty."
-            exit 1
-          fi
+          test -n "$FDROID_KEY_PASSWORD"
+          test -n "$FDROID_KEY_PASS"
+          test -n "$FDROID_KEYSTORE_PASSWORD"
+          test -n "$FDROID_KEY_STORE_PASS"
 
           fdroid update
 
-      - name: Verify generated repository
+      - name: Show generated repository
         working-directory: fdroid
         run: |
           set -e
 
-          echo "Checking generated files..."
+          echo "========================================"
+          echo "Generated F-Droid repository:"
+          echo "========================================"
 
-          if [ ! -f repo/Sound_Of_Math.apk ]; then
-            echo "ERROR: APK missing."
-            exit 1
-          fi
-
-          if [ ! -f repo/index.jar ]; then
-            echo "ERROR: index.jar was not generated."
-            exit 1
-          fi
-
-          if [ ! -f repo/index.xml ]; then
-            echo "ERROR: index.xml was not generated."
-            exit 1
-          fi
+          find repo -maxdepth 3 -type f -printf '%p\n' | sort
 
           echo
-          echo "F-Droid repository generated successfully!"
-          echo
+          echo "========================================"
+          echo "Required files:"
+          echo "========================================"
 
-          find repo -maxdepth 3 -type f -print
+          test -f repo/Sound_Of_Math.apk
+          test -f repo/index.jar
+          test -f repo/index.xml
+
+          if [ -f repo/index-v1.jar ]; then
+            echo "FOUND: index-v1.jar"
+          else
+            echo "MISSING: index-v1.jar"
+          fi
+
+          if [ -f repo/index-v1.json ]; then
+            echo "FOUND: index-v1.json"
+          else
+            echo "MISSING: index-v1.json"
+          fi
+
+          if [ -f repo/index-v2.json ]; then
+            echo "FOUND: index-v2.json"
+          else
+            echo "MISSING: index-v2.json"
+          fi
+
+          if [ -f repo/entry.jar ]; then
+            echo "FOUND: entry.jar"
+          else
+            echo "MISSING: entry.jar"
+          fi
+
+          if [ -f repo/entry.json ]; then
+            echo "FOUND: entry.json"
+          else
+            echo "MISSING: entry.json"
+          fi
+
+      - name: Verify repository is not empty
+        working-directory: fdroid
+        run: |
+          set -e
+
+          test -s repo/index.jar
+          test -s repo/index.xml
+
+          echo "Repository contains a valid signed index."
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
