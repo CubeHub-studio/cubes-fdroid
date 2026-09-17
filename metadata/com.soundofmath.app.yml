@@ -18,9 +18,12 @@ Description: |
   Sound of Math is an application that turns mathematical concepts
   and calculations into sound.
 
-RepoType: None
+RepoType: git
+
+Repo: https://github.com/CubeHub-studio/sound-of-math-fdroid.git
 
 Builds:
   - versionName: 1.0
     versionCode: 1
-    disable: true
+    commit: main
+    subdir: .
