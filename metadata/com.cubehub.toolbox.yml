@@ -7,8 +7,6 @@ WebSite: https://github.com/CubeHub-studio/cubes-fdroid
 
 SourceCode: https://github.com/CubeHub-studio/cubes-fdroid
 
-IssueTracker: https://github.com/CubeHub-studio/cubes-fdroid/issues
-
 AutoName: CH: ToolBox
 
 Summary: A collection of useful tools from CubeHub
@@ -16,14 +14,3 @@ Summary: A collection of useful tools from CubeHub
 Description: |
   CH: ToolBox is a collection of useful tools
   provided by CubeHub Studio.
-
-RepoType: git
-
-Repo: https://github.com/CubeHub-studio/cubes-fdroid.git
-
-Builds:
-  - versionName: 1.0
-    versionCode: 1
-    commit: main
-    subdir: .
-    output: CH_Toolbox.apk
