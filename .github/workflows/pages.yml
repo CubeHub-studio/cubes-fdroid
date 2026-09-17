@@ -158,12 +158,9 @@ jobs:
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
           FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
-
           FDROID_KEY_STORE_PASS: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
           FDROID_KEY_PASS: ${{ secrets.FDROID_KEY_PASSWORD }}
-
         working-directory: fdroid
-
         run: |
           set -e
 
@@ -234,10 +231,40 @@ jobs:
 
           echo "Repository contains a valid signed index."
 
+      - name: Prepare GitHub Pages site
+        run: |
+          set -e
+
+          rm -rf site
+          mkdir -p site/repo
+
+          cp -a fdroid/repo/. site/repo/
+
+          echo "========================================"
+          echo "GitHub Pages site:"
+          echo "========================================"
+
+          find site -maxdepth 3 -type f -printf '%p\n' | sort
+
+          echo
+          echo "========================================"
+          echo "Verifying Pages repository:"
+          echo "========================================"
+
+          test -s site/repo/index.jar
+          test -s site/repo/index-v1.jar
+          test -s site/repo/index-v1.json
+          test -s site/repo/index-v2.json
+          test -s site/repo/entry.jar
+          test -s site/repo/entry.json
+          test -s site/repo/Sound_Of_Math.apk
+
+          echo "GitHub Pages repository structure is valid."
+
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: fdroid/repo
+          path: site
 
       - name: Deploy GitHub Pages
         id: deployment
