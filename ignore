@@ -1,0 +1,25 @@
+# F-Droid build artifacts
+repo/*.log
+repo/status/
+repo/index.xml
+repo/index-v1.json
+repo/index-v1.jar
+repo/entry.json
+repo/entry.jar
+tmp/
+build/
+unsigned/
+
+# Keystore / signing material - never commit these
+*.keystore
+*.jks
+keystore.p12
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
