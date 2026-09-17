@@ -1,0 +1,27 @@
+Categories:
+  - Science & Education
+License: GPL-3.0-or-later
+AuthorName: Your Name
+SourceCode: https://github.com/yourusername/sound-of-math
+IssueTracker: https://github.com/yourusername/sound-of-math/issues
+
+AutoName: Sound of Math
+Description: |
+  Sound of Math turns mathematical functions into sound, letting you
+  hear the shape of equations as well as see them.
+
+RepoType: git
+Repo: https://github.com/yourusername/sound-of-math.git
+
+Builds:
+  - versionName: "1.0"
+    versionCode: 1
+    commit: v1.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: "1.0"
+CurrentVersionCode: 1

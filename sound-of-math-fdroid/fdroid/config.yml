@@ -1,0 +1,7 @@
+repo_url: https://yourusername.github.io/sound-of-math-fdroid/repo
+repo_name: "Sound of Math F-Droid Repo"
+repo_icon: sound-of-math-fdroid-icon.png
+repo_description: |
+  A personal F-Droid repository hosting the Sound of Math app.
+
+archive_older: 0
