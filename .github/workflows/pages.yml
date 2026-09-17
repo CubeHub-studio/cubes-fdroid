@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,9 +27,9 @@ jobs:
       - name: Install F-Droid Server
         run: |
           python -m pip install --upgrade pip
-          pip install fdroidserver
+          python -m pip install fdroidserver
 
-      - name: Prepare F-Droid repository
+      - name: Check required secrets
         env:
           FDROID_KEYSTORE: ${{ secrets.FDROID_KEYSTORE }}
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
@@ -37,9 +37,38 @@ jobs:
         run: |
           set -e
 
+          if [ -z "$FDROID_KEYSTORE" ]; then
+            echo "ERROR: FDROID_KEYSTORE is missing."
+            exit 1
+          fi
+
+          if [ -z "$FDROID_KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: FDROID_KEYSTORE_PASSWORD is missing."
+            exit 1
+          fi
+
+          if [ -z "$FDROID_KEY_PASSWORD" ]; then
+            echo "ERROR: FDROID_KEY_PASSWORD is missing."
+            exit 1
+          fi
+
+          echo "All required secrets are present."
+
+      - name: Prepare F-Droid directories
+        run: |
+          set -e
+
+          rm -rf fdroid
+
           mkdir -p fdroid/repo
           mkdir -p fdroid/metadata
           mkdir -p fdroid/repo/icons
+
+      - name: Restore signing keystore
+        env:
+          FDROID_KEYSTORE: ${{ secrets.FDROID_KEYSTORE }}
+        run: |
+          set -e
 
           echo "$FDROID_KEYSTORE" | base64 --decode > fdroid/keystore.p12
 
@@ -47,8 +76,23 @@ jobs:
 
           test -s fdroid/keystore.p12
 
+          echo "Keystore restored."
+
+      - name: Copy Sound of Math APK
+        run: |
+          set -e
+
+          if [ ! -f repo/Sound_Of_Math.apk ]; then
+            echo "ERROR: repo/Sound_Of_Math.apk not found."
+            exit 1
+          fi
+
           cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
 
+          echo "APK copied successfully."
+
+      - name: Create metadata
+        run: |
           cat > fdroid/metadata/com.soundofmath.app.yml <<'EOF'
           Categories:
             - Science
@@ -71,10 +115,19 @@ jobs:
             and calculations into sound.
           EOF
 
+      - name: Create F-Droid configuration
+        env:
+          FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
+          FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+        run: |
+          set -e
+
           cat > fdroid/config.yml <<EOF
           repo_url: https://cubehub-studio.github.io/sound-of-math-fdroid/repo
           repo_name: Sound of Math F-Droid Repository
           repo_description: Official F-Droid repository for Sound of Math
+
+          repo_icon: repo/icons/icon.png
 
           archive_older: 0
 
@@ -91,11 +144,17 @@ jobs:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
         working-directory: fdroid
         run: |
-          keytool -list \
+          set -e
+
+          keytool \
+            -list \
+            -v \
             -storetype PKCS12 \
             -keystore keystore.p12 \
             -storepass "$FDROID_KEYSTORE_PASSWORD" \
             -alias soundofmath
+
+          echo "Signing key verified."
 
       - name: Generate F-Droid repository
         env:
@@ -105,9 +164,31 @@ jobs:
           FDROID_KEY_PASS: ${{ secrets.FDROID_KEY_PASSWORD }}
         working-directory: fdroid
         run: |
+          set -e
+
+          if [ -z "$FDROID_KEY_PASSWORD" ]; then
+            echo "ERROR: FDROID_KEY_PASSWORD is empty."
+            exit 1
+          fi
+
+          if [ -z "$FDROID_KEY_PASS" ]; then
+            echo "ERROR: FDROID_KEY_PASS is empty."
+            exit 1
+          fi
+
+          if [ -z "$FDROID_KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: FDROID_KEYSTORE_PASSWORD is empty."
+            exit 1
+          fi
+
+          if [ -z "$FDROID_KEY_STORE_PASS" ]; then
+            echo "ERROR: FDROID_KEY_STORE_PASS is empty."
+            exit 1
+          fi
+
           fdroid update
 
-      - name: Verify generated repository
+      - name: Verify repository
         working-directory: fdroid
         run: |
           set -e
@@ -117,6 +198,7 @@ jobs:
           test -f repo/index.xml
 
           echo "F-Droid repository generated successfully."
+
           ls -lh repo/
 
       - name: Upload GitHub Pages artifact
@@ -124,6 +206,6 @@ jobs:
         with:
           path: fdroid/repo
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
