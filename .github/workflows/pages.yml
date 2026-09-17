@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -29,31 +29,74 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install fdroidserver
 
-      - name: Prepare F-Droid repository
+      - name: Prepare F-Droid directory
         run: |
-          mkdir -p repo
-          mkdir -p icons
-          mkdir -p fdroid
+          mkdir -p fdroid/repo
+          mkdir -p fdroid/metadata
 
-      - name: Copy APK
+      - name: Verify APK
         run: |
-          cp Sound_Of_Math.apk repo/Sound_Of_Math.apk
+          echo "Checking APK..."
+          ls -lh repo/Sound_Of_Math.apk
+          file repo/Sound_Of_Math.apk
 
-      - name: Generate repository metadata
+      - name: Copy APK into F-Droid repository
+        run: |
+          cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
+
+      - name: Create F-Droid configuration
+        run: |
+          cd fdroid
+
+          if [ ! -f config.yml ]; then
+            fdroid init
+          fi
+
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path("config.yml")
+
+          if path.exists():
+              with path.open("r", encoding="utf-8") as f:
+                  config = yaml.safe_load(f) or {}
+          else:
+              config = {}
+
+          config["repo_url"] = "https://cubehub-studio.github.io/sound-of-math-fdroid/repo"
+          config["repo_name"] = "Sound of Math F-Droid Repository"
+          config["repo_description"] = "F-Droid repository for Sound of Math"
+          config["archive_older"] = 0
+
+          with path.open("w", encoding="utf-8") as f:
+              yaml.safe_dump(config, f, sort_keys=False)
+          PY
+
+      - name: Generate F-Droid metadata
         run: |
           cd fdroid
           fdroid update --create-metadata
 
+      - name: Show generated repository
+        run: |
+          echo "Generated F-Droid repository:"
+          find fdroid/repo -maxdepth 2 -type f -print
+          echo
+          echo "Repository contents:"
+          ls -lah fdroid/repo
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload repository
+      - name: Upload F-Droid repository
         uses: actions/upload-pages-artifact@v3
         with:
-          path: repo
+          path: fdroid/repo
 
   deploy:
     needs: build
+
     runs-on: ubuntu-latest
 
     permissions:
