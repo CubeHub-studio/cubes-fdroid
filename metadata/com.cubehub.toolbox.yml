@@ -1,0 +1,28 @@
+Categories:
+  - Utilities
+
+License: Unknown
+
+WebSite: https://github.com/CubeHub-studio/cubes-fdroid
+
+SourceCode: https://github.com/CubeHub-studio/cubes-fdroid
+
+IssueTracker: https://github.com/CubeHub-studio/cubes-fdroid/issues
+
+AutoName: CubeHub Toolbox
+
+Summary: A collection of useful tools from CubeHub
+
+Description: |
+  CubeHub Toolbox is a collection of useful tools
+  provided by CubeHub Studio.
+
+RepoType: git
+
+Repo: https://github.com/CubeHub-studio/cubes-fdroid.git
+
+Builds:
+  - versionName: 1.0
+    versionCode: 1
+    commit: main
+    subdir: .
