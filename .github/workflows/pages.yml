@@ -29,67 +29,69 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install fdroidserver
 
-      - name: Prepare F-Droid directory
+      - name: Prepare F-Droid directories
         run: |
           mkdir -p fdroid/repo
           mkdir -p fdroid/metadata
+          mkdir -p fdroid/keys
 
       - name: Verify APK
         run: |
           echo "Checking APK..."
+          test -f repo/Sound_Of_Math.apk
           ls -lh repo/Sound_Of_Math.apk
-          file repo/Sound_Of_Math.apk
 
-      - name: Copy APK into F-Droid repository
+      - name: Copy APK
         run: |
           cp repo/Sound_Of_Math.apk fdroid/repo/Sound_Of_Math.apk
 
       - name: Create F-Droid configuration
         run: |
-          cd fdroid
+          cat > fdroid/config.yml <<'EOF'
+          repo_url: https://cubehub-studio.github.io/sound-of-math-fdroid/repo
+          repo_name: Sound of Math F-Droid Repository
+          repo_description: F-Droid repository for Sound of Math
 
-          if [ ! -f config.yml ]; then
-            fdroid init
+          archive_older: 0
+
+          keystore: keystore.p12
+          keystorepass: soundofmath-keystore
+          keypass: soundofmath-key
+          repo_keyalias: soundofmath
+
+          EOF
+
+      - name: Generate repository signing key
+        working-directory: fdroid
+        run: |
+          if [ ! -f keystore.p12 ]; then
+            fdroid update --create-key
           fi
 
-          python - <<'PY'
-          from pathlib import Path
-          import yaml
-
-          path = Path("config.yml")
-
-          if path.exists():
-              with path.open("r", encoding="utf-8") as f:
-                  config = yaml.safe_load(f) or {}
-          else:
-              config = {}
-
-          config["repo_url"] = "https://cubehub-studio.github.io/sound-of-math-fdroid/repo"
-          config["repo_name"] = "Sound of Math F-Droid Repository"
-          config["repo_description"] = "F-Droid repository for Sound of Math"
-          config["archive_older"] = 0
-
-          with path.open("w", encoding="utf-8") as f:
-              yaml.safe_dump(config, f, sort_keys=False)
-          PY
-
       - name: Generate F-Droid metadata
+        working-directory: fdroid
         run: |
-          cd fdroid
           fdroid update --create-metadata
 
-      - name: Show generated repository
+      - name: Verify generated repository
         run: |
-          echo "Generated F-Droid repository:"
+          echo "Generated files:"
           find fdroid/repo -maxdepth 2 -type f -print
+
           echo
-          echo "Repository contents:"
-          ls -lah fdroid/repo
+          echo "Checking required repository files..."
+
+          test -f fdroid/repo/index.jar
+          test -f fdroid/repo/index.xml
+          test -f fdroid/repo/Sound_Of_Math.apk
+
+          echo
+          echo "F-Droid repository generated successfully!"
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload F-Droid repository
+      - name: Upload repository
         uses: actions/upload-pages-artifact@v3
         with:
           path: fdroid/repo
