@@ -58,56 +58,51 @@ jobs:
           chmod 600 fdroid/keystore.p12
           test -s fdroid/keystore.p12
 
-      - name: Copy APK and app icons
+      - name: Copy all APKs and app icons
         run: |
           set -e
-          test -f repo/CH_Toolbox.apk
-          cp repo/CH_Toolbox.apk fdroid/repo/CH_Toolbox.apk
+
+          shopt -s nullglob
+          APK_FILES=(repo/*.apk)
+          test "${#APK_FILES[@]}" -gt 0 || { echo "ERROR: No APK files found in repo/."; exit 1; }
+
+          echo "Copying APKs:"
+          for apk in "${APK_FILES[@]}"; do
+            cp "$apk" fdroid/repo/
+            echo "  $apk"
+          done
 
           mkdir -p fdroid/repo/icons-640
           mkdir -p fdroid/repo/icons
 
-          if test -f icons/com.cubehub.toolbox.png; then
-            ICON="icons/com.cubehub.toolbox.png"
-          elif test -f icons/com.cubehub.toolbox.0.png; then
-            ICON="icons/com.cubehub.toolbox.0.png"
-          else
-            echo "ERROR: CH: ToolBox icon not found."
-            ls -lah icons || true
-            exit 1
-          fi
+          ICON_COUNT=0
+          for icon in icons/*.png; do
+            filename="$(basename "$icon")"
+            appid="${filename%.0.png}"
+            appid="${appid%.png}"
 
-          cp "$ICON" fdroid/repo/icons-640/com.cubehub.toolbox.png
-          cp "$ICON" fdroid/repo/icons/com.cubehub.toolbox.png
+            cp "$icon" "fdroid/repo/icons-640/${appid}.png"
+            cp "$icon" "fdroid/repo/icons/${appid}.png"
+            echo "  Icon: $icon -> ${appid}.png"
+            ICON_COUNT=$((ICON_COUNT + 1))
+          done
 
-          test -f fdroid/repo/icons-640/com.cubehub.toolbox.png
-          test -f fdroid/repo/icons/com.cubehub.toolbox.png
-
-          echo "APK and app icons copied:"
-          ls -lh fdroid/repo/CH_Toolbox.apk
-          ls -lh fdroid/repo/icons-640/com.cubehub.toolbox.png
-          ls -lh fdroid/repo/icons/com.cubehub.toolbox.png
+          echo "Copied ${#APK_FILES[@]} APK(s) and $ICON_COUNT icon(s)."
 
       - name: Create metadata
         run: |
           set -e
-          cat > fdroid/metadata/com.cubehub.toolbox.yml <<'EOF'
-          Categories:
-            - Utilities
+          cp metadata/*.yml fdroid/metadata/ 2>/dev/null || true
 
-          License: Unknown
+          echo "Existing metadata:"
+          ls -lh fdroid/metadata || true
 
-          WebSite: https://github.com/CubeHub-studio/cubes-fdroid
-          SourceCode: https://github.com/CubeHub-studio/cubes-fdroid
+          cd fdroid
+          fdroid update --create-metadata || true
+          cd ..
 
-          AutoName: "CH: ToolBox"
-
-          Summary: A collection of useful tools from CubeHub
-
-          Description: |
-            CH: ToolBox is a collection of useful tools
-            provided by CubeHub Studio.
-          EOF
+          echo "Final metadata:"
+          ls -lh fdroid/metadata
 
       - name: Create F-Droid configuration
         env:
@@ -147,7 +142,7 @@ jobs:
         working-directory: fdroid
         run: |
           set -e
-          fdroid update
+          fdroid update --create-metadata
 
       - name: Show generated repository
         working-directory: fdroid
