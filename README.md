@@ -1,38 +1,33 @@
-# Sound of Math F-Droid Repository
+# CH: ToolBox F-Droid Repository
 
-This repository hosts the F-Droid repository for **Sound of Math**.
+This repository hosts the F-Droid repository for **CH: ToolBox**.
 
 ## App
 
-* **Name:** Sound of Math
-* **Package ID:** `com.soundofmath.app`
-* **Version:** 1.0
-* **Version Code:** 1
+* **Name:** CH: ToolBox
+* **Package ID:** `com.cubehub.toolbox`
+* **APK:** `CH_Toolbox.apk`
 
 ## F-Droid Repository
 
 Add this repository to an F-Droid-compatible client:
 
-`https://cubehub-studio.github.io/sound-of-math-fdroid/repo`
+`https://cubehub-studio.github.io/cubes-fdroid/repo`
 
 ## Source
 
 GitHub repository:
 
-`https://github.com/CubeHub-studio/sound-of-math-fdroid`
+`https://github.com/CubeHub-studio/cubes-fdroid`
 
 ## Website
 
-`https://cubehub-studio.github.io/sound-of-math-fdroid/`
-
-## License
-
-License information for Sound of Math is currently unspecified.
+`https://cubehub-studio.github.io/cubes-fdroid/`
 
 ## Repository Structure
 
 ```text
-repo/       F-Droid repository files and APKs
+repo/       F-Droid repository APKs and generated indexes
 metadata/   F-Droid app metadata
 icons/      App icons
 fdroid/     F-Droid configuration
