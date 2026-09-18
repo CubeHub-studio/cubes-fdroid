@@ -58,13 +58,26 @@ jobs:
           chmod 600 fdroid/keystore.p12
           test -s fdroid/keystore.p12
 
-      - name: Copy APK
+      - name: Copy APK and app icons
         run: |
           set -e
           test -f repo/CH_Toolbox.apk
           cp repo/CH_Toolbox.apk fdroid/repo/CH_Toolbox.apk
-          echo "APK copied:"
+
+          mkdir -p fdroid/repo/icons-640
+          mkdir -p fdroid/repo/icons
+
+          test -f icons/com.cubehub.toolbox.png
+          cp icons/com.cubehub.toolbox.png fdroid/repo/icons-640/com.cubehub.toolbox.png
+          cp icons/com.cubehub.toolbox.png fdroid/repo/icons/com.cubehub.toolbox.png
+
+          test -f fdroid/repo/icons-640/com.cubehub.toolbox.png
+          test -f fdroid/repo/icons/com.cubehub.toolbox.png
+
+          echo "APK and app icons copied:"
           ls -lh fdroid/repo/CH_Toolbox.apk
+          ls -lh fdroid/repo/icons-640/com.cubehub.toolbox.png
+          ls -lh fdroid/repo/icons/com.cubehub.toolbox.png
 
       - name: Create metadata
         run: |
