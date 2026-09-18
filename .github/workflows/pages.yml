@@ -78,7 +78,7 @@ jobs:
           WebSite: https://github.com/CubeHub-studio/cubes-fdroid
           SourceCode: https://github.com/CubeHub-studio/cubes-fdroid
 
-          AutoName: CH: ToolBox
+          AutoName: "CH: ToolBox"
 
           Summary: A collection of useful tools from CubeHub
 
