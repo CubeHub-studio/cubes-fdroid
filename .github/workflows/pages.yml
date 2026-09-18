@@ -95,8 +95,8 @@ jobs:
           set -e
           cat > fdroid/config.yml <<EOF
           repo_url: https://cubehub-studio.github.io/cubes-fdroid/repo
-          repo_name: CH: ToolBox F-Droid Repository
-          repo_description: Official F-Droid repository for CH: ToolBox
+          repo_name: "CH: ToolBox F-Droid Repository"
+          repo_description: "Official F-Droid repository for CH: ToolBox"
 
           archive_older: 0
 
