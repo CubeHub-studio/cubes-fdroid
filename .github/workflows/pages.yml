@@ -94,15 +94,8 @@ jobs:
           set -e
           cp metadata/*.yml fdroid/metadata/ 2>/dev/null || true
 
-          echo "Existing metadata:"
+          echo "Metadata copied from repository:"
           ls -lh fdroid/metadata || true
-
-          cd fdroid
-          fdroid update --create-metadata || true
-          cd ..
-
-          echo "Final metadata:"
-          ls -lh fdroid/metadata
 
       - name: Create F-Droid configuration
         env:
