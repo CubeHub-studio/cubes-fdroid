@@ -18,6 +18,9 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
@@ -124,6 +127,12 @@ jobs:
           EOF
           chmod 600 fdroid/config.yml
 
+      - name: Create metadata for any new APKs
+        working-directory: fdroid
+        run: |
+          set -e
+          fdroid update --create-metadata
+
       - name: Verify signing key
         env:
           FDROID_KEYSTORE_PASSWORD: ${{ secrets.FDROID_KEYSTORE_PASSWORD }}
@@ -176,7 +185,4 @@ jobs:
 
       - name: Deploy GitHub Pages
         id: deployment
-        environment:
-          name: github-pages
-          url: ${{ steps.deployment.outputs.page_url }}
         uses: actions/deploy-pages@v4
