@@ -67,9 +67,18 @@ jobs:
           mkdir -p fdroid/repo/icons-640
           mkdir -p fdroid/repo/icons
 
-          test -f icons/com.cubehub.toolbox.png
-          cp icons/com.cubehub.toolbox.png fdroid/repo/icons-640/com.cubehub.toolbox.png
-          cp icons/com.cubehub.toolbox.png fdroid/repo/icons/com.cubehub.toolbox.png
+          if test -f icons/com.cubehub.toolbox.png; then
+            ICON="icons/com.cubehub.toolbox.png"
+          elif test -f icons/com.cubehub.toolbox.0.png; then
+            ICON="icons/com.cubehub.toolbox.0.png"
+          else
+            echo "ERROR: CH: ToolBox icon not found."
+            ls -lah icons || true
+            exit 1
+          fi
+
+          cp "$ICON" fdroid/repo/icons-640/com.cubehub.toolbox.png
+          cp "$ICON" fdroid/repo/icons/com.cubehub.toolbox.png
 
           test -f fdroid/repo/icons-640/com.cubehub.toolbox.png
           test -f fdroid/repo/icons/com.cubehub.toolbox.png
